@@ -1,0 +1,27 @@
+import cv2
+import numpy as np
+
+def hide_image(cover_img_path, secret_img_path, shift_bits=4):
+    # Step 1: Read the original image and the image which is to be hidden in the original image 
+    cover_img = cv2.imread(cover_img_path, cv2.IMREAD_GRAYSCALE)
+    secret_img = cv2.imread(secret_img_path, cv2.IMREAD_GRAYSCALE)
+
+    # Ensure both images are the same size
+    secret_img = cv2.resize(secret_img, (cover_img.shape[1], cover_img.shape[0]))
+
+    # Step 2: Shift the image to hide in the cover image by X bits. 
+    secret_img_shifted = np.right_shift(secret_img, shift_bits)
+
+    # Step 3: And the original image or cover image with 240 which is 11110000 So four MSB’s set to 0.
+    cover_img_masked = np.bitwise_and(cover_img, 240)
+
+    # Step 4: The shifted hidden image and the result of step 3 are bitored. 
+    # This makes changes only in the X LSB bits so that the image is hidden in the original image.
+    stego_img = np.bitwise_or(cover_img_masked, secret_img_shifted)
+
+    return stego_img
+
+
+# Usage:
+stego_img = hide_image('cover.png', 'secret.png', shift_bits=4)
+cv2.imwrite('stego.png', stego_img)
